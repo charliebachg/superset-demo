@@ -341,10 +341,30 @@ def _parse_temporal_join_values(series: pd.Series, column_name: str) -> pd.Serie
     """Parse working temporal values and wrap pandas parser-policy errors."""
     if pd.api.types.is_datetime64_any_dtype(series):
         return series
+    if _has_multiple_utc_offsets(series):
+        return _parse_mixed_offset_values(series)
     try:
         return pd.to_datetime(series, errors="coerce", format="mixed")
     except (TypeError, ValueError) as ex:
         raise _temporal_axis_parse_error(column_name) from ex
+
+
+def _parse_mixed_offset_values(series: pd.Series) -> pd.Series:
+    """
+    Parse values carrying differing UTC offsets one by one, keeping each
+    offset so callers can read the local wall clock. Unparseable values
+    become NaT, matching ``errors="coerce"``.
+    """
+
+    def parse(value: Any) -> pd.Timestamp:
+        if pd.isna(value):
+            return pd.NaT
+        try:
+            return pd.Timestamp(value)
+        except (TypeError, ValueError):
+            return pd.NaT
+
+    return series.map(parse).astype(object)
 
 
 def _retry_temporal_join_values_at_wider_resolution(
