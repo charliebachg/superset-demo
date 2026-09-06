@@ -2093,6 +2093,7 @@ class ExploreMixin:  # pylint: disable=too-many-public-methods
         row: pd.Series,
         dimension: str,
         columns_by_name: dict[str, "TableColumn"],
+        db_extra: dict[str, Any] | None = None,
     ) -> Union[str, int, float, bool, str]:
         """
         Convert a prequery result type to its equivalent Python type.
@@ -2104,6 +2105,7 @@ class ExploreMixin:  # pylint: disable=too-many-public-methods
         :param row: A prequery record
         :param dimension: The dimension name
         :param columns_by_name: The mapping of columns by name
+        :param db_extra: The database extra config; fetched from the database if None
         :return: equivalent primitive python type
         """
 
@@ -2113,7 +2115,8 @@ class ExploreMixin:  # pylint: disable=too-many-public-methods
             value = value.item()
 
         column_ = columns_by_name.get(dimension)
-        db_extra: dict[str, Any] = self.database.get_extra()
+        if db_extra is None:
+            db_extra = self.database.get_extra()
 
         if column_ is None:
             # Column not found, return value as-is
