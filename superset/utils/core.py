@@ -2061,7 +2061,7 @@ def _process_datetime_column(
             # Column has already been formatted as a timestamp.
             try:
                 df[col.col_label] = pd.to_datetime(dttm_series)
-            except ValueError:
+            except (ValueError, TypeError):
                 logger.warning(
                     "Unable to convert column %s to datetime, ignoring",
                     col.col_label,
