@@ -386,12 +386,11 @@ class QueryContextProcessor:
             sub_query.row_limit = None
             sub_query.row_offset = 0
             result = self._qc_datasource.get_query_result(sub_query)
-            level_df = result.df.copy()
-            for label in all_labels:
-                level_df[grouping_marker_label(label)] = (
-                    0 if label in level_labels else 1
-                )
-            frames.append(level_df)
+            markers = {
+                grouping_marker_label(label): (0 if label in level_labels else 1)
+                for label in all_labels
+            }
+            frames.append(result.df.assign(**markers))
 
         if result is None:  # no levels requested; nothing to do
             return self._qc_datasource.get_query_result(query_object)
