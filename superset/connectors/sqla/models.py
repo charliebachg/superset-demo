@@ -2187,6 +2187,7 @@ class SqlaTable(
         columns_by_name: dict[str, TableColumn],
     ) -> ColumnElement:
         groups = []
+        db_extra: dict[str, Any] = self.database.get_extra()
         for _unused, row in df.iterrows():
             group = []
             for dimension in dimensions:
@@ -2194,6 +2195,7 @@ class SqlaTable(
                     row,
                     dimension,
                     columns_by_name,
+                    db_extra=db_extra,
                 )
 
                 group.append(groupby_exprs[dimension] == value)
