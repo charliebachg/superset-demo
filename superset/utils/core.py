@@ -2060,9 +2060,7 @@ def _process_datetime_column(
         else:
             # Column has already been formatted as a timestamp.
             try:
-                df[col.col_label] = dttm_series.apply(
-                    lambda x: pd.Timestamp(x) if pd.notna(x) else pd.NaT
-                )
+                df[col.col_label] = pd.to_datetime(dttm_series)
             except ValueError:
                 logger.warning(
                     "Unable to convert column %s to datetime, ignoring",
