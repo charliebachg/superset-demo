@@ -56,8 +56,7 @@ def contribution(
     :return: DataFrame with contributions.
     """
     contribution_df = df.copy()
-    numeric_df = contribution_df.select_dtypes(include=["number", Decimal])
-    numeric_df.fillna(0, inplace=True)
+    numeric_df = df.select_dtypes(include=["number", Decimal]).fillna(0)
     # verify column selections
     if columns:
         numeric_columns = numeric_df.columns.tolist()
