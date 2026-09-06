@@ -163,14 +163,35 @@ class CSVReader(BaseDataReader):
         :return: Boolean Series indicating which rows have
         invalid values for the target type
         """
-        invalid_mask = pd.Series([False] * len(df), index=df.index)
-        for idx, value in df[column].items():
-            if pd.notna(value):
-                try:
-                    pd.Series([value]).astype(dtype)
-                except (ValueError, TypeError):
-                    invalid_mask[idx] = True
-        return invalid_mask
+        values = df[column]
+        nothing_invalid = pd.Series(False, index=df.index)
+
+        if dtype.startswith("datetime"):
+            converted = pd.to_datetime(values, errors="coerce")
+            return converted.isna() & values.notna()
+
+        non_null = values.dropna()
+        if non_null.empty:
+            return nothing_invalid
+
+        try:
+            non_null.astype(dtype)
+        except (ValueError, TypeError):
+            pass
+        else:
+            return nothing_invalid
+
+        source_dtype = values.dtype
+
+        def is_invalid(value: Any) -> bool:
+            try:
+                pd.Series([value], dtype=source_dtype).astype(dtype)
+            except (ValueError, TypeError):
+                return True
+            return False
+
+        invalid = non_null.map(is_invalid)
+        return invalid.reindex(df.index, fill_value=False).astype(bool)
 
     @staticmethod
     def _get_error_details(
